@@ -109,7 +109,7 @@ if uploaded_file is not None:
                     mime='text/csv',
                 )
 
-                # Allow users to download the cluster means (summary)
+                # Allow users to download the cluster means.... (summary)
                 cluster_summary_csv = cluster_means.to_csv(index=False)
                 st.download_button(
                     label="Download Cluster Summary",
