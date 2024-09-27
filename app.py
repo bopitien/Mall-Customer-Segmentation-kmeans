@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 # Load the pre-trained model (the model you've trained)
-pretrained_model_path = r'C:\Users\pascal\Desktop\New Projects\Mall Customer Segmentation Data\kmeans_model.pkl'
+pretrained_model_path = "kmeans_model.pkl"
 kmeans_pretrained = joblib.load(pretrained_model_path)
 
 # Define the data processing pipeline (scaling)
