@@ -119,7 +119,7 @@ if uploaded_file is not None:
                 )
 
             else:
-                # Train a new K-Means model
+                # Train a new K-Means model.....
                 st.write("Training a new model...")
 
                 # Plot Elbow Method to guide users in selecting the number of clusters
