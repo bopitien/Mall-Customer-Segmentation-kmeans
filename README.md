@@ -84,4 +84,7 @@ The project was successfully deployed on both a local server and Streamlit Cloud
 # Conclusion
 This customer segmentation project effectively demonstrates how machine learning, specifically K-Means clustering, can help businesses better understand their customer base and tailor their marketing strategies. 
 The project showcases the integration of a machine learning model into a user-friendly web application using Streamlit, making it accessible to a wide range of users who may not have a technical background. 
-Analyzing key customer attributes, the business can make informed decisions that lead to more personalized marketing efforts and improved customer satisfaction.
+Analyzing key customer attributes, the business can make informed decisions that lead to more personalized marketing efforts and improved customer satisfaction.  
+
+# webApp Link
+https://cust-segmentation-app.streamlit.app
