@@ -65,32 +65,80 @@ if uploaded_file is not None:
                 cluster_labels = kmeans_pretrained.predict(X_scaled)
                 df['Cluster'] = cluster_labels  # Add the cluster labels to the original DataFrame
                 
+                # **Add cluster names based on your predefined labels**
+                cluster_names = {
+                    0: "Average Customers",
+                    1: "Premium Customers",
+                    2: "Young Spenders",
+                    3: "Affluent Savers",
+                    4: "Budget-Conscious Shoppers"
+                }
+                df['Cluster_Name'] = df['Cluster'].map(cluster_names)
+                
                 # Display cluster mean values and visualization
                 st.write("Mean values for each cluster:")
 
-                
                 # Get numeric columns, but exclude 'CustomerID'
                 numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
                 if 'CustomerID' in numeric_columns:
                     numeric_columns.remove('CustomerID')  # Remove 'CustomerID' from the list of numeric columns
-                # Group by 'Cluster' and calculate means for only numeric columns
-                cluster_means = df.groupby('Cluster')[numeric_columns].mean()  # Group by 'Cluster' and calculate means for numeric columns
+                # Group by 'Cluster_Name' and calculate means for only numeric columns
+                cluster_means = df.groupby('Cluster_Name')[numeric_columns].mean()
                 st.write(cluster_means)
 
-                # Plot clusters using Plotly for interactivity
+                # **Plot clusters using Plotly for interactivity**
                 st.write("Cluster Visualization with Centroids:")
                 centroids = kmeans_pretrained.cluster_centers_  # Get the centroids of the clusters
-                fig = px.scatter(
-                    x=X_scaled[:, 0], 
-                    y=X_scaled[:, 1], 
-                    color=cluster_labels.astype(str), 
-                    title="Cluster Visualization",
-                    labels={ "x": numeric_cols[0], "y": numeric_cols[1] }
-                )
-                # Add centroids to the plot
-                fig.add_scatter(x=centroids[:, 0], y=centroids[:, 1], mode='markers', marker=dict(size=12, color='red'), name='Centroids')
+
+                # **Check if at least 3 numeric columns are selected for 3D plot**
+                if X_scaled.shape[1] >= 3:
+                    # 3D scatter plot
+                    fig = px.scatter_3d(
+                        x=X_scaled[:, 0], 
+                        y=X_scaled[:, 1], 
+                        z=X_scaled[:, 2], 
+                        color=cluster_labels.astype(str), 
+                        title="3D Cluster Visualization",
+                        labels={"x": numeric_cols[0], "y": numeric_cols[1], "z": numeric_cols[2]}
+                    )
+                    # Add centroids to the plot
+                    fig.add_scatter3d(
+                        x=centroids[:, 0], 
+                        y=centroids[:, 1], 
+                        z=centroids[:, 2], 
+                        mode='markers', 
+                        marker=dict(size=12, color='red'), 
+                        name='Centroids'
+                    )
+                else:
+                    # 2D scatter plot
+                    fig = px.scatter(
+                        x=X_scaled[:, 0], 
+                        y=X_scaled[:, 1], 
+                        color=cluster_labels.astype(str), 
+                        title="Cluster Visualization",
+                        labels={"x": numeric_cols[0], "y": numeric_cols[1]}
+                    )
+                    # Add centroids to the plot
+                    fig.add_scatter(
+                        x=centroids[:, 0], 
+                        y=centroids[:, 1], 
+                        mode='markers', 
+                        marker=dict(size=12, color='red'), 
+                        name='Centroids'
+                    )
                 st.plotly_chart(fig)
 
+                # **Plot bar chart of cluster counts with cluster names**
+                st.write("Cluster Counts:")
+                cluster_counts = df['Cluster_Name'].value_counts()
+                fig_bar = px.bar(
+                    x=cluster_counts.index,
+                    y=cluster_counts.values,
+                    labels={'x': 'Cluster', 'y': 'Number of Customers'},
+                    title='Number of Customers in Each Cluster'
+                )
+                st.plotly_chart(fig_bar)
 
                 # Distribution of selected numeric columns
                 st.write("Distribution of Numeric Columns:")
@@ -99,6 +147,7 @@ if uploaded_file is not None:
                     sns.histplot(df[col], kde=True, bins=20)
                     plt.title(f"Distribution of {col}")
                     st.pyplot(plt)
+                    plt.close()  # Close the figure to avoid overlapping plots
 
                 # Allow users to download the dataset with cluster labels
                 csv = df.to_csv(index=False)
@@ -109,8 +158,8 @@ if uploaded_file is not None:
                     mime='text/csv',
                 )
 
-                # Allow users to download the cluster means.... (summary)
-                cluster_summary_csv = cluster_means.to_csv(index=False)
+                # Allow users to download the cluster means (summary)
+                cluster_summary_csv = cluster_means.to_csv(index=True)
                 st.download_button(
                     label="Download Cluster Summary",
                     data=cluster_summary_csv,
@@ -119,7 +168,7 @@ if uploaded_file is not None:
                 )
 
             else:
-                # Train a new K-Means model.....
+                # Train a new K-Means model
                 st.write("Training a new model...")
 
                 # Plot Elbow Method to guide users in selecting the number of clusters
@@ -135,6 +184,7 @@ if uploaded_file is not None:
                     plt.xlabel('Number of Clusters')
                     plt.ylabel('WCSS')
                     st.pyplot(plt)
+                    plt.close()  # Close the figure to avoid overlapping plots
 
                 st.write("Elbow Method to guide cluster selection:")
                 plot_elbow(X_scaled)  # Display the Elbow plot
@@ -148,6 +198,10 @@ if uploaded_file is not None:
                 cluster_labels = kmeans.predict(X_scaled)
                 df['Cluster'] = cluster_labels  # Add the cluster labels to the original DataFrame
 
+                # **Assign generic cluster names**
+                cluster_names = {i: f'Cluster {i}' for i in range(n_clusters)}
+                df['Cluster_Name'] = df['Cluster'].map(cluster_names)
+
                 # Display mean values for each cluster
                 st.write("Mean values for each cluster:")
 
@@ -156,8 +210,8 @@ if uploaded_file is not None:
                 if 'CustomerID' in numeric_columns:
                     numeric_columns.remove('CustomerID')  # Remove 'CustomerID' if it's in the numeric columns list
 
-                # Group by 'Cluster' and calculate means for only numeric columns
-                cluster_means = df.groupby('Cluster')[numeric_columns].mean()
+                # Group by 'Cluster_Name' and calculate means for only numeric columns
+                cluster_means = df.groupby('Cluster_Name')[numeric_columns].mean()
                 st.write(cluster_means)
 
                 # Display evaluation metrics (Silhouette Score and WCSS)
@@ -166,19 +220,59 @@ if uploaded_file is not None:
                 st.write(f"Silhouette Score: {silhouette_avg:.4f}")
                 st.write(f"Inertia (WCSS): {wcss:.4f}")
 
-                # Plot clusters using Plotly for interactivity
+                # **Plot clusters using Plotly for interactivity**
                 st.write("Cluster Visualization with Centroids:")
                 centroids = kmeans.cluster_centers_  # Get the centroids of the clusters
-                fig = px.scatter(
-                    x=X_scaled[:, 0], 
-                    y=X_scaled[:, 1], 
-                    color=cluster_labels.astype(str), 
-                    title="Cluster Visualization",
-                    labels={ "x": numeric_cols[0], "y": numeric_cols[1] }
-                )
-                # Add centroids to the plot
-                fig.add_scatter(x=centroids[:, 0], y=centroids[:, 1], mode='markers', marker=dict(size=12, color='red'), name='Centroids')
+
+                # **Check if at least 3 numeric columns are selected for 3D plot**
+                if X_scaled.shape[1] >= 3:
+                    # 3D scatter plot
+                    fig = px.scatter_3d(
+                        x=X_scaled[:, 0], 
+                        y=X_scaled[:, 1], 
+                        z=X_scaled[:, 2], 
+                        color=cluster_labels.astype(str), 
+                        title="3D Cluster Visualization",
+                        labels={"x": numeric_cols[0], "y": numeric_cols[1], "z": numeric_cols[2]}
+                    )
+                    # Add centroids to the plot
+                    fig.add_scatter3d(
+                        x=centroids[:, 0], 
+                        y=centroids[:, 1], 
+                        z=centroids[:, 2], 
+                        mode='markers', 
+                        marker=dict(size=12, color='red'), 
+                        name='Centroids'
+                    )
+                else:
+                    # 2D scatter plot
+                    fig = px.scatter(
+                        x=X_scaled[:, 0], 
+                        y=X_scaled[:, 1], 
+                        color=cluster_labels.astype(str), 
+                        title="Cluster Visualization",
+                        labels={"x": numeric_cols[0], "y": numeric_cols[1]}
+                    )
+                    # Add centroids to the plot
+                    fig.add_scatter(
+                        x=centroids[:, 0], 
+                        y=centroids[:, 1], 
+                        mode='markers', 
+                        marker=dict(size=12, color='red'), 
+                        name='Centroids'
+                    )
                 st.plotly_chart(fig)
+
+                # **Plot bar chart of cluster counts with cluster names**
+                st.write("Cluster Counts:")
+                cluster_counts = df['Cluster_Name'].value_counts()
+                fig_bar = px.bar(
+                    x=cluster_counts.index,
+                    y=cluster_counts.values,
+                    labels={'x': 'Cluster', 'y': 'Number of Customers'},
+                    title='Number of Customers in Each Cluster'
+                )
+                st.plotly_chart(fig_bar)
 
                 # Distribution of selected numeric columns
                 st.write("Distribution of Numeric Columns:")
@@ -187,6 +281,7 @@ if uploaded_file is not None:
                     sns.histplot(df[col], kde=True, bins=20)
                     plt.title(f"Distribution of {col}")
                     st.pyplot(plt)
+                    plt.close()  # Close the figure to avoid overlapping plots
 
                 # Allow users to download the dataset with cluster labels
                 csv = df.to_csv(index=False)
@@ -198,7 +293,7 @@ if uploaded_file is not None:
                 )
 
                 # Allow users to download the cluster means (summary)
-                cluster_summary_csv = cluster_means.to_csv(index=False)
+                cluster_summary_csv = cluster_means.to_csv(index=True)
                 st.download_button(
                     label="Download Cluster Summary",
                     data=cluster_summary_csv,
